@@ -1,0 +1,123 @@
+---
+title: "Primeiro .qmd"
+format: 
+  html: 
+    toc: true            
+    toc-location: right  
+    toc-title: "Navegação"
+    toc-floating: true   
+    theme: cosmo         
+editor: visual
+---
+
+## Exemplo de análises
+
+O presente documento descreve os procedimentos de análises de dados empregados no curso de elaboração de relatórios com .qmd.
+
+### 1. Instalando e carregando pacotes de análises
+
+É necessário instalar os pacotes antes do carregamento caso não os tenha instalados na sua própria máquina.
+
+Para isso, use a função `install.packages`.
+
+```{r}
+#| message: false
+#| warning: false
+
+# install.packages("tidyverse")
+# install.packages("gapminder")
+
+library(tidyverse)
+library(gapminder)
+
+```
+
+### 2. Carregamento de dados e descrição de variáveis
+
+Vamos acessar os dados já vem do pacote gapminder.
+
+```{r}
+
+df <- gapminder
+
+glimpse(df)
+
+```
+
+As variáveis do `df` , conforme apresentado acima, são:
+
+1.  country: país;
+
+2.  continent: continente;
+
+3.  year: ano;
+
+4.  lifeExp: expectativa de vida;
+
+5.  pop: população;
+
+6.  gdpPercap: PIB per capita.
+
+### 3. Análise exploratória de dados
+
+Vamos fazer uma análise exploratória da expectativa média por continente ao longo do tempo. Para isso, vamos:
+
+-   Agrupar as observações por continente e ano;
+
+-   Sumarizar a variável `lifeExp`.
+
+```{r}
+#| message: false
+#| warning: false
+
+exp_media <- 
+  df |> 
+  group_by(continent, year) |> 
+  summarise(expectativa_media = mean(lifeExp)) |> 
+  mutate(expectativa_media = round(expectativa_media, 2))
+
+exp_media
+
+```
+
+Em sequência, vamos plotar no formato de gráfico.
+
+```{r}
+
+exp_media |> 
+  ggplot(aes(x = year,
+             y = expectativa_media,
+             col = continent)) +
+  geom_line() + 
+  theme_minimal() + 
+  ylim(0, 100) + 
+  xlab("Ano") + 
+  ylab("Expectativa de vida média (em anos)")
+
+```
+
+Vamos verificar o recorte de um ano apenas: 1982.
+
+```{r}
+
+exp_media |> 
+  filter(year == "1982") |> 
+  ggplot(aes(x = year,
+             y = expectativa_media,
+             fill = continent)) +
+  geom_col(position = "dodge") + 
+  geom_text(aes(label = expectativa_media),
+            position = position_dodge(width = 0.9),
+            vjust = -0.8,  
+            size = 3.5) +
+  theme_minimal() + 
+  ylim(0, 100) + 
+  xlab("Ano") + 
+  ylab("Expectativa de vida média (em anos)") + 
+  theme(axis.text.x = element_blank())
+
+```
+
+## Regressão linear
+
+A seguir, apresentamos
