@@ -18,7 +18,7 @@ O presente documento descreve os procedimentos de análises de dados empregados 
 
 É necessário instalar os pacotes antes do carregamento caso não os tenha instalados na sua própria máquina.
 
-Para isso, use a função `install.packages`.
+Para isso, use a função `install.packages` antes de chamar o comando `library`.
 
 ```{r}
 #| message: false
