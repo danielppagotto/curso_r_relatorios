@@ -1,0 +1,142 @@
+---
+title: "quarto_documento_curso"
+format: 
+  html:
+    toc: true
+editor: visual
+---
+
+## 1. Sobre a pesquisa
+
+O objetivo da presente pesquisa é analisar a associação entre PIB per capita e expectativa de vida.
+
+Para isso, serão utilizados dados da base do instituto *Gapminder*.
+
+## 2. Instalando e carregando pacotes do R
+
+Foram carregados os pacotes necessários para as análises. Os pacotes foram: `tidyverse`, `modelsummary`, `gapminder`, `DT`.
+
+```{r}
+#| message: false
+#| warning: false
+
+#install.packages("tidyverse")
+#install.packages("gapminder")
+#install.packages("modelsummary")
+
+library(tidyverse)
+library(gapminder)
+library(modelsummary)
+library(DT)
+
+```
+
+## 3. Sobre os dados
+
+Os dados são provenientes do instituto Gapminder e podem ser baixados automaticamente por meio do pacote do R chamado `gapminder`. Para mais informações sobre o instituto, acesse [aqui](https://www.gapminder.org/).
+
+![Logo do Instituto Gapminder](gapminder.jpg){fig-align="center"}
+
+```{r}
+
+df <- gapminder::gapminder
+
+# atalho para o pipe (|>) ctrl + shift + m
+
+df |> 
+  DT::datatable()
+
+```
+
+A descrição das variáveis está relacionada abaixo:
+
+-   country: país;
+
+-   year: ano em que os dados foram coletados;
+
+-   gdpPercap: PIB per capita do país naquele ano. Corresponde à soma das riquezas de um país dividido pela sua população.
+
+## 4. Análise Exploratória de Dados
+
+Nesta seção, vamos fazer uma análise sobre expectativa de vida média por continente no ano de 2007.
+
+```{r}
+
+df |> 
+  filter(year == 2007) |> 
+  group_by(continent) |> 
+  summarise(media_le = mean(lifeExp),
+            sd_le = sd(lifeExp))
+
+```
+
+```{r}
+
+df |> 
+  filter(country == "Brazil" |
+         country == "Chile") |> 
+  ggplot(aes(x = year,
+             y = lifeExp, 
+             col = country)) +
+  geom_line() + 
+  theme_minimal() + 
+  ylim(0, 100) + 
+  xlab("Ano") + 
+  ylab("Expectativa de Vida") + 
+  ggtitle("Evolução da expectativa de vida - Brasil e Chile")
+
+```
+
+## 5. Regressão linear 
+
+Vamos criar uma regressão linear simples, utilizando duas variáveis, sendo que a variável dependente é a expectativa de vida (`lifeExp`) e variável independente é o PIB per capita (`gdpPercap`).
+
+Vamos aplicar um recorte para o ano de 2007 apenas.
+
+```{r}
+
+df_2007 <- df |> 
+            filter(year == 2007)
+
+df_2007 |> 
+  ggplot(aes(x = log(gdpPercap), 
+             y = lifeExp)) + 
+  geom_point(aes(col = continent)) + 
+  geom_smooth(method = 'lm',
+              se = FALSE) +
+  theme_minimal()
+
+
+```
+
+A equação da regressão linear é descrita de acordo com cálculo abaixo.
+
+$$
+y_i = \beta_0 + \sum_{j=1}^{p} \beta_j\,x_{ij} + \varepsilon_i,\qquad i=1,\dots,n
+$$ {#eq-1}
+
+```{r}
+
+modelo1 <- lm("lifeExp ~ log(gdpPercap)", df_2007)
+modelo2 <- lm("lifeExp ~ log(gdpPercap) + continent", df_2007)
+
+```
+
+```{r}
+
+modelsummary(
+  list(modelo1, modelo2),
+  output = "gt",
+  estimate = "{estimate}{stars}",
+  type = "text",
+  title = "Resultado de Regressão Linear",
+  conf_level = 0.95,
+  stars      = c("*" = .10, 
+                 "**" = .05, 
+                 "***" = .01),
+  gof_rename = c("nobs"="N", 
+                 "r.squared"="R²", 
+                 "adj.r.squared"="R² ajustado", 
+                 "rmse"="RMSE"))
+
+```
